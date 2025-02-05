@@ -44,8 +44,6 @@ static int aws_on_path_cb(http_parser *parser, const char *buffer, size_t length
 	return 0;
 }
 
-// buffer-ul de trimitere (send_buffer) al unei conexiuni
-// pentru a include antetul răspunsului HTTP care va fi trimis clientului. Este specifică pentru un răspuns HTTP cu statusul 200 OK
 static void connection_prepare_send_reply_header(struct connection *conn)
 {
 	/* TODO: Prepare the connection buffer to send the reply header. */
@@ -75,7 +73,6 @@ static void connection_prepare_send_404(struct connection *conn)
 	conn->file_size = 0;
 }
 
-// vedem ce tip de file avem
 static enum resource_type connection_get_resource_type(struct connection *conn)
 {
 	/* TODO: Get resource type depending on request path/filename. Filename should
@@ -95,7 +92,6 @@ static enum resource_type connection_get_resource_type(struct connection *conn)
 	return RESOURCE_TYPE_NONE;
 }
 
-// receive si send buffer init
 static void initialize_connection_buffers(struct connection *conn)
 {
 	// receive and send buffers
@@ -109,7 +105,6 @@ static void initialize_connection_socket(struct connection *conn, int sockfd)
 	conn->sockfd = sockfd;
 	conn->fd = -1;
 	conn->eventfd = eventfd(0, EFD_NONBLOCK);
-	//  Face file descriptorul non-blocking, ceea ce înseamnă că operațiile de citire/scriere nu vor bloca execuția procesului.
 }
 
 static void initialize_connection_state(struct connection *conn)
@@ -140,18 +135,12 @@ void connection_start_async_io(struct connection *conn)
 	 * Use io_submit(2) & friends for reading data asynchronously.
 	 */
 	conn->state = STATE_ASYNC_ONGOING;
-	 //sugerează că serverul știe să nu proceseze alte operațiuni pentru această conexiune până când operația asincronă este completă.
-	// iocb io control block
 	struct iocb *prep_io = &conn->iocb;
 
-// Este o funcție care configurează o operație de citire asincronă (pread) într-o structură iocb.
 	io_prep_pread(prep_io, conn->fd, conn->send_buffer, BUFSIZ, conn->file_pos);
-	// piocb este un tablou de pointeri catre structuri iocb
 	conn->piocb[0] = prep_io;
 	io_set_eventfd(prep_io, conn->eventfd);
 
-	//         Asociază operațiunea de I/O cu file descriptorul conn->eventfd,
-	// astfel încât evenimentele legate de această operație vor semnala descriptorul de eveniment.
 	if (io_submit(conn->ctx, 1, conn->piocb) < 0) {
 		perror("io_submit");
 		exit(EXIT_FAILURE);
@@ -159,12 +148,9 @@ void connection_start_async_io(struct connection *conn)
 
 	// update epoll with file descriptors
 	int epoll_fd = epollfd;
-
-	//Adaugă conn->eventfd în epoll pentru a monitoriza evenimentele de tip EPOLLIN (indică faptul că există date noi disponibile pentru citire).
-	// Când eventfd este semnalizat(de kernel), epoll va notifica bucla principală a serverului.
+	
 	w_epoll_add_ptr_in(epoll_fd, conn->eventfd, conn);
-
-	// Actualizează descriptorul socketului (conn->sockfd) în epoll, pentru a continua să monitorizeze conexiunea TCP între server și client.
+	
 	w_epoll_update_ptr_in(epoll_fd, conn->sockfd, conn);
 }
 
@@ -249,7 +235,7 @@ void receive_data(struct connection *conn)
 	int file_status = connection_open_file(conn);
 
 	if (header_status < 0 || file_status < 0) {
-		// sens 404 message for failure
+		// sends 404 message for failure
 		connection_prepare_send_404(conn);
 		conn->state = STATE_SENDING_404;
 		return;
