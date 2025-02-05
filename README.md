@@ -26,9 +26,9 @@ The file processing will be:
 
 After transmitting a file, according to the HTTP protocol, the connection is closed.
 
-### Details and recommendations for the implementation
+### Details about the implementation
 
-- Implementing the assignment requires having a state machine for each connection, which you periodically query and update as the transfer proceeds.
+- Implementation requires having a state machine for each connection, which you periodically query and update as the transfer proceeds.
 Check the `connection_state` data structure defined in the [assignment header](./skel/awh.h).
 - Find the `connection` data structure defined in the [assignment header](./skel/awh.h).
 This can be used to keep track of an open connection.
@@ -49,8 +49,6 @@ For parsing HTTP requests from clients we recommend using [this HTTP parser](htt
 You will need to use a callback to get the path to the local resource requested by the client.
 Find a simplified example of using the parser in the [samples directory](./skel/http-parser/samples/).
 
-
-> It can be reorganized as desired, as long as all the requirements of the assignment are implemented.
 
 ### Debugging
 
