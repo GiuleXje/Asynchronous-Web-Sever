@@ -29,8 +29,8 @@ After transmitting a file, according to the HTTP protocol, the connection is clo
 ### Details about the implementation
 
 - Implementation requires having a state machine for each connection, which you periodically query and update as the transfer proceeds.
-Check the `connection_state` data structure defined in the [assignment header](./skel/awh.h).
-- Find the `connection` data structure defined in the [assignment header](./skel/awh.h).
+Check the `connection_state` data structure defined in the [assignment header](./awh.h).
+- Find the `connection` data structure defined in the [assignment header](./awh.h).
 This can be used to keep track of an open connection.
 - Definitions of other useful macros and data structures can be found in the assignment header.
 - HTTP responses will have the code `200` for existing files and `404` for not existing files.
